@@ -10,6 +10,11 @@ def dlog(str):
         log(str)
 
 
+
+    
+
+
+
 def check_space_wrapper(r, c, board_size):
     # check space, except doesn't hit you with game errors
     if r < 0 or c < 0 or c >= board_size or r >= board_size:
@@ -29,6 +34,7 @@ def turn():
 
     team = get_team()
     opp_team = Team.WHITE if team == Team.BLACK else team.BLACK
+    same_team = Team.WHITE if team == Team.WHITE else team.BLACK
     dlog('Team: ' + str(team))
 
     robottype = get_type()
@@ -78,12 +84,22 @@ def turn():
         else:
             index = board_size - 1
 
+
         for _ in range(board_size):
-            i = random.randint(0, board_size - 1)
-            if not check_space(index, i):
-                spawn(index, i)
-                dlog('Spawned unit at: (' + str(index) + ', ' + str(i) + ')')
-                break
+            if check_space(index, 7) == False:
+                 elif check_space(index, 8) == False:
+                     spawn(index, 8)
+                     dlog('Spawned unit at: (' + str(index) + ', ' + str(8) + ')')
+                spawn(index, 7)
+                dlog('Spawned unit at: (' + str(index) + ', ' + str(7) + ')')
+            else:
+                i = random.randint(0, board_size - 1)
+                if not check_space(index, i):
+                    spawn(index, i)
+                    dlog('Spawned unit at: (' + str(index) + ', ' + str(i) + ')')
+                    break
+            
+            
 
     bytecode = get_bytecode()
     dlog('Done! Bytecode left: ' + str(bytecode))
