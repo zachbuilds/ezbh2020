@@ -42,52 +42,147 @@ def turn():
     This function will be called at the beginning of every turn and should contain the bulk of your robot commands
     """
 
-    dlog('Starting Turn!')
+    #dlog('Starting Turn!')
     board_size = get_board_size()
 
     team = get_team()
     opp_team = Team.WHITE if team == Team.BLACK else team.BLACK
     same_team = Team.WHITE if team == Team.WHITE else team.BLACK
-    dlog('Team: ' + str(team))
+    #dlog('Team: ' + str(team))
 
     robottype = get_type()
-    dlog('Type: ' + str(robottype))
+    #dlog('Type: ' + str(robottype))
 
 
     if robottype == RobotType.PAWN:
         row, col = get_location()
-        dlog('My location is: ' + str(row) + ' ' + str(col))
+        #dlog('My location is: ' + str(row) + ' ' + str(col))
 
         if team == Team.WHITE:
             forward = 1
             backward = -1
+            index = 0
         else:
             forward = -1
             backward = 1
+            index = board_size - 1
 
         tryCapture = True
         avoidCapture = True
+        triangleFormation = True
 
 
         # One-stop status checker
         if (on_board(row + backward, col + 1)):
             if (check_space(row + backward, col + 1) == same_team):
                 innerBackRight = True
+            else:
+                innerBackRight = False
+        else:
+            innerBackRight = False
+
         if (on_board(row + backward, col - 1)):
             if (check_space(row + backward, col - 1) == same_team):
                 innerBackLeft = True
-        if (on_board(row + 2*backward, col + 1)):
-            if (check_space(row + (2*backward), col + 1) == same_team):
+            else:
+                innerBackLeft = False
+        else:
+            innerBackLeft = False
+
+        if (on_board(row + 2*backward, col + 2)):
+            if (check_space(row + (2*backward), col + 2) == same_team):
                 outerBackRight = True
-        if (on_board(row + 2*backward, col - 1)):
-            if (check_space(row + (2*backward), col - 1) == same_team):
+            else:
+                outerBackRight = False
+        else:
+            outerBackRight = False
+
+        if (on_board(row + 2*backward, col - 2)):
+            if (check_space(row + (2*backward), col - 2) == same_team):
                 outerBackLeft = True
+            else:
+                outerBackLeft = False
+        else:
+            outerBackLeft = False
+
         if (on_board(row + 2*backward, col)):
             if (check_space(row + (2*backward), col) == same_team):
                 outerBackCenter = True
+            else:
+                outerBackCenter = False
+        else:
+            outerBackCenter = False
+
+        if (on_board(row + forward, col + 1)):
+            if (check_space(row + forward, col + 1) == same_team):
+                innerFrontRight = True
+            else:
+                innerFrontRight = False
+        else:
+            innerFrontRight = False
+
+        if (on_board(row + forward, col - 1)):
+            if (check_space(row + forward, col - 1) == same_team):
+                innerFrontLeft = True
+            else:
+                innerFrontLeft = False
+        else:
+            innerFrontLeft = False
+
+        if (on_board(row, col + 2)):
+            if (check_space(row, col + 2) == same_team):
+                outerRight = True
+            else:
+                outerRight = False
+        else:
+            outerRight = False
+
+        if (on_board(row, col - 2)):
+            if (check_space(row, col - 2) == same_team):
+                outerLeft = True
+            else:
+                outerLeft = False
+        else:
+            outerLeft = False
+
+        if (on_board(row + 2*forward, col + 2)):
+            if (check_space(row + 2*forward, col + 2) == same_team):
+                outerFrontRight = True
+            else:
+                outerFrontRight = False
+        else:
+            outerFrontRight = False
+
+        if (on_board(row + 2*forward, col)):
+            if (check_space(row + 2*forward, col) == same_team):
+                outerFrontCenter = True
+            else:
+                outerFrontCenter = False
+        else:
+            outerFrontCenter = False
 
 
 
+        if(avoidCapture):
+
+            if (on_board(row + (2*forward), col + 1)):
+                if (check_space(row + (2*forward), col + 1) == opp_team):
+                    if (check_space(row + forward, col + 1) == same_team):
+                        move_forward()
+                        dlog('Would\'ve waited, but had to sacrifice to avoid stalemate')
+                        return
+                    else:
+                        dlog('Waited patiently')
+                        return
+            elif (on_board(row + (2*forward), col - 1)):
+                if (check_space(row + (2*forward), col - 1) == opp_team):
+                    if (check_space(row + forward, col - 1) == same_team):
+                        move_forward()
+                        dlog('Would\'ve waited, but had to sacrifice to avoid stalemate')
+                        return
+                    else:
+                        dlog('Waited patiently')
+                        return
         # try capturing pieces
         
         if(tryCapture):
@@ -101,37 +196,60 @@ def turn():
                 dlog('Captured at: (' + str(row + forward) + ', ' + str(col - 1) + ')')
                 return
 
-        #avoid capture 
-        #if it senses an enemy pawn in the top right or left, don't move.
-        if(avoidCapture):
+        if(triangleFormation):
+            # for leading pawn
+            if(row == index and not (innerFrontRight or innerFrontLeft)): # identifies front pawn
+                move_forward()
+            elif (row == index + forward and (innerBackLeft or innerBackRight)):
+                if (innerBackLeft and innerBackRight):
+                    move_forward()
+                else:
+                    # wait
+                    return
+            elif (row == index + 2*forward and (outerBackLeft or outerBackRight or outerBackCenter)):
+                if (outerBackLeft and outerBackRight and outerBackCenter):
+                    move_forward()
+                else:
+                    # wait
+                    return
 
-            if (on_board(row + (2*forward), col + 1)):
-                if (check_space(row + (2*forward), col + 1) == opp_team):
-                    if (check_space(row + forward, col + 1) == same_team):
-                        move_forward()
-                        dlog('Would\'ve waited, but had to sacrifice to avoid stalemate')
-                        return
-                    else:
-                        dlog('Waited patiently')
-                        return
-                elif (row + forward != -1 and row + forward != board_size and not check_space_wrapper(row + forward, col, board_size)):
+            # for secondary pawns
+
+            if(row == index and (outerLeft or outerRight) and not (outerLeft and outerRight)): #identifies secondary pawn. tertiary pawns will be spawned far right, then far left, then center to make them identifiable
+                if(outerRight and innerFrontRight):
                     move_forward()
-            elif (on_board(row + (2*forward), col - 1)):
-                if (check_space(row + (2*forward), col - 1) == opp_team):
-                    if (check_space(row + forward, col - 1) == same_team):
-                        move_forward()
-                        dlog('Would\'ve waited, but had to sacrifice to avoid stalemate')
-                        return
-                    else:
-                        dlog('Waited patiently')
-                        return
-                elif (row + forward != -1 and row + forward != board_size and not check_space_wrapper(row + forward, col, board_size)):
+                elif(outerLeft and innerFrontLeft):
                     move_forward()
-            # otherwise try to move forward
-            elif (row + forward != -1 and row + forward != board_size and not check_space_wrapper(row + forward, col, board_size)):
+                else:
+                    # wait
+                    return
+            elif(row == index and not (outerLeft or outerRight)):
+                # wait
+                return
+            elif(row == index + forward and not (innerFrontRight or innerFrontLeft)):
+                move_forward()
+            elif(row == index + forward and (innerFrontRight or innerFrontLeft) and not (outerFrontRight or outerFrontCenter)):
+                 # wait
+                 return
+
+            # for tertiary pawns
+            dlog('Checking tertiary')
+            if(row == index and (outerRight or outerLeft)):
                 move_forward()
 
-        elif (row + forward != -1 and row + forward != board_size and not check_space_wrapper(row + forward, col, board_size)):
+
+
+
+            
+
+
+
+        
+
+        #avoid capture 
+        #if it senses an enemy pawn in the top right or left, don't move.
+
+        if (row + forward != -1 and row + forward != board_size and not check_space_wrapper(row + forward, col, board_size)):
                 move_forward()
 
 
@@ -150,16 +268,33 @@ def turn():
         if team == Team.WHITE:
             index = 0
             critRow = 2
+            forward = 1
+            backward = -1
         else:
             index = board_size - 1
             critRow = board_size - 3
+            forward = -1
+            backward = 1
 
         spawnDefense = True
         spawnRandom = True
+        spawnFormation = True
 
         # TODO: SPAWN UNDER ENEMY PAWN IN SECOND TO LAST ROW AS LAST RESORT, MAYBE AVOID SPAWN ON EITHER SIDE?
         #       PREEMPTIVELY ATTACK ROWS OF TWO
         # checks the third row from the bottom to see if there are enemy pawns and spawns defensive pawn on adjacent column
+
+        board = get_board()
+        numBots = 0
+
+        dlog(str(board))
+        for bot in board:
+            dlog(str(bot))
+            if(bot == Team.WHITE or bot == Team.BLACK):
+                numBots += 1
+        if numBots > 12:
+            spawnFormation = False
+
         if(spawnDefense):
             for col in range(0, 16):
                 if check_space(critRow, col) == opp_team:
@@ -175,6 +310,29 @@ def turn():
                             hasSpawned = True
                             dlog('Spawned defensive pawn at ' + str(index) + ', ' + str(col))
                             break
+
+
+        if(spawnFormation):
+            if(not check_space(index, 8) == same_team and not check_space(index + forward, 7) == same_team and not check_space(index+forward, 8)):
+                spawn(index, 8)
+            elif(check_space(index + forward, 8) == same_team and not check_space(index + 2*forward, 7)): # if only leader pawn
+                if(not check_space(index, 7) == same_team):
+                    spawn(index, 7)
+                elif(not check_space(index, 9) == same_team):
+                    spawn(index, 9)
+                else:
+                    dlog("Some error happened when spawning row 2")
+            if(check_space(index + 2*forward, 8) == same_team and check_space(index + forward, 7) == same_team and check_space(index + forward, 9)):
+                if(not check_space(index, 10)):
+                    spawn(index, 10)
+                elif(not check_space(index, 6)):
+                    spawn(index, 6)
+                elif(not check_space(index, 8)):
+                    spawn(index, 8)
+
+                 
+
+
 
         if(spawnRandom):
             if not hasSpawned:
@@ -192,5 +350,5 @@ def turn():
                         dlog('Spawned unit at: (' + str(index) + ', ' + str(i) + ')')
                         break
 
-    bytecode = get_bytecode()
-    dlog('Done! Bytecode left: ' + str(bytecode))
+        bytecode = get_bytecode()
+        dlog('Done! Bytecode left: ' + str(bytecode))
