@@ -196,6 +196,11 @@ def turn():
                 dlog('Captured at: (' + str(row + forward) + ', ' + str(col - 1) + ')')
                 return
 
+
+        #tertiary pawn escape sequence: 
+        if (row == index + 2*forward and (outerRight and outerLeft)):
+            move_forward()
+
         if(triangleFormation):
             # for leading pawn
             if(row == index and not (innerFrontRight or innerFrontLeft)): # identifies front pawn
@@ -287,11 +292,13 @@ def turn():
         board = get_board()
         numBots = 0
 
+
         dlog(str(board))
         for bot in board:
             dlog(str(bot))
             if(bot == Team.WHITE or bot == Team.BLACK):
                 numBots += 1
+        dlog("Bots on the board: " + str(numBots))
         if numBots > 12:
             spawnFormation = False
 
@@ -313,25 +320,42 @@ def turn():
 
 
         if(spawnFormation):
-            if(not check_space(index, 8) == same_team and not check_space(index + forward, 7) == same_team and not check_space(index+forward, 8)):
-                spawn(index, 8)
-            elif(check_space(index + forward, 8) == same_team and not check_space(index + 2*forward, 7)): # if only leader pawn
-                if(not check_space(index, 7) == same_team):
-                    spawn(index, 7)
-                elif(not check_space(index, 9) == same_team):
-                    spawn(index, 9)
-                else:
-                    dlog("Some error happened when spawning row 2")
-            if(check_space(index + 2*forward, 8) == same_team and check_space(index + forward, 7) == same_team and check_space(index + forward, 9)):
-                if(not check_space(index, 10)):
-                    spawn(index, 10)
-                elif(not check_space(index, 6)):
-                    spawn(index, 6)
-                elif(not check_space(index, 8)):
+            if not check_space(index + 3*forward, 8) and not check_space(index + 4*forward, 8) and not check_space(index + 5*forward, 8) and not check_space(index + 6*forward, 8) and not check_space(index + 7*forward, 8) and not check_space(index + 8*forward, 8) and not check_space(index + 9*forward, 8):
+                if(not check_space(index, 8) == same_team and not check_space(index + forward, 7) == same_team and not check_space(index+forward, 8)):
                     spawn(index, 8)
-
-                 
-
+                elif(check_space(index + forward, 8) == same_team and not check_space(index + 2*forward, 7)): # if only leader pawn
+                    if(not check_space(index, 7) == same_team):
+                        spawn(index, 7)
+                    elif(not check_space(index, 9) == same_team):
+                        spawn(index, 9)
+                    else:
+                        dlog("Some error happened when spawning row 2")
+                if(check_space(index + 2*forward, 8) == same_team and check_space(index + forward, 7) == same_team and check_space(index + forward, 9)):
+                    if(not check_space(index, 10)):
+                        spawn(index, 10)
+                    elif(not check_space(index, 6)):
+                        spawn(index, 6)
+                    elif(not check_space(index, 8)):
+                        spawn(index, 8)
+            if not check_space(index + 3*forward, 4):
+                if(not check_space(index, 4) == same_team and not check_space(index + forward, 3) == same_team and not check_space(index+forward, 4)):
+                    spawn(index, 4)
+                elif(check_space(index + forward, 4) == same_team and not check_space(index + 2*forward, 3)): # if only leader pawn
+                    if(not check_space(index, 3) == same_team):
+                        spawn(index, 3)
+                    elif(not check_space(index, 5) == same_team):
+                        spawn(index, 5)
+                    else:
+                        dlog("Some error happened when spawning row 2")
+                if(check_space(index + 2*forward, 4) == same_team and check_space(index + forward, 3) == same_team and check_space(index + forward, 5)):
+                    if(not check_space(index, 6)):
+                        spawn(index, 6)
+                    elif(not check_space(index, 2)):
+                        spawn(index, 2)
+                    elif(not check_space(index, 4)):
+                        spawn(index, 4)
+            
+            
 
 
         if(spawnRandom):
