@@ -161,6 +161,14 @@ def turn():
         else:
             outerFrontCenter = False
 
+        if (on_board(row + 2*forward, col - 2)):
+            if (check_space(row + 2*forward, col - 2) == same_team):
+                outerFrontLeft = True
+            else:
+                outerFrontLeft = False
+        else:
+            outerFrontLeft = False
+
 
 
         if(avoidCapture):
@@ -197,29 +205,44 @@ def turn():
                 return
 
         if(triangleFormation):
+            # tertiary pawn escape clause
+            if(row == index + 2*forward and (outerRight and outerLeft)):
+                if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                    move_forward()
+                    return
+
             # for leading pawn
             if(row == index and not (innerFrontRight or innerFrontLeft)): # identifies front pawn
-                move_forward()
+                if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                    move_forward()
+                    return
             elif (row == index + forward and (innerBackLeft or innerBackRight)):
                 if (innerBackLeft and innerBackRight):
-                    move_forward()
+                    if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                        move_forward()
+                        return
                 else:
                     # wait
                     return
             elif (row == index + 2*forward and (outerBackLeft or outerBackRight or outerBackCenter)):
                 if (outerBackLeft and outerBackRight and outerBackCenter):
-                    move_forward()
+                    if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                        move_forward()
+                        return
                 else:
                     # wait
                     return
 
             # for secondary pawns
-
             if(row == index and (outerLeft or outerRight) and not (outerLeft and outerRight)): #identifies secondary pawn. tertiary pawns will be spawned far right, then far left, then center to make them identifiable
                 if(outerRight and innerFrontRight):
-                    move_forward()
+                    if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                        move_forward()
+                        return
                 elif(outerLeft and innerFrontLeft):
-                    move_forward()
+                    if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                        move_forward()
+                        return
                 else:
                     # wait
                     return
@@ -227,15 +250,18 @@ def turn():
                 # wait
                 return
             elif(row == index + forward and not (innerFrontRight or innerFrontLeft)):
-                move_forward()
+                if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                    move_forward()
+                    return
             elif(row == index + forward and (innerFrontRight or innerFrontLeft) and not (outerFrontRight or outerFrontCenter)):
                  # wait
                  return
 
             # for tertiary pawns
-            dlog('Checking tertiary')
             if(row == index and (outerRight or outerLeft)):
-                move_forward()
+                if(on_board(row + forward, col) and not check_space_wrapper(row + forward, col, board_size)):
+                    move_forward()
+                    return
 
 
 
@@ -251,6 +277,7 @@ def turn():
 
         if (row + forward != -1 and row + forward != board_size and not check_space_wrapper(row + forward, col, board_size)):
                 move_forward()
+                return
 
 
 
@@ -270,11 +297,13 @@ def turn():
             critRow = 2
             forward = 1
             backward = -1
+            opp_index = board_size - 1
         else:
             index = board_size - 1
             critRow = board_size - 3
             forward = -1
             backward = 1
+            opp_index = 0
 
         spawnDefense = True
         spawnRandom = True
@@ -283,17 +312,7 @@ def turn():
         # TODO: SPAWN UNDER ENEMY PAWN IN SECOND TO LAST ROW AS LAST RESORT, MAYBE AVOID SPAWN ON EITHER SIDE?
         #       PREEMPTIVELY ATTACK ROWS OF TWO
         # checks the third row from the bottom to see if there are enemy pawns and spawns defensive pawn on adjacent column
-
-        board = get_board()
-        numBots = 0
-
-        dlog(str(board))
-        for bot in board:
-            dlog(str(bot))
-            if(bot == Team.WHITE or bot == Team.BLACK):
-                numBots += 1
-        if numBots > 12:
-            spawnFormation = False
+        
 
         if(spawnDefense):
             for col in range(0, 16):
@@ -311,24 +330,34 @@ def turn():
                             dlog('Spawned defensive pawn at ' + str(index) + ', ' + str(col))
                             break
 
+        # doesn't spawn formations if the pawns are building up on the opposite side
+        if(check_space(opp_index, 8) == same_team and check_space(opp_index + backward, 8) == same_team):
+            spawnFormation = False
+
 
         if(spawnFormation):
             if(not check_space(index, 8) == same_team and not check_space(index + forward, 7) == same_team and not check_space(index+forward, 8)):
                 spawn(index, 8)
+                return
             elif(check_space(index + forward, 8) == same_team and not check_space(index + 2*forward, 7)): # if only leader pawn
                 if(not check_space(index, 7) == same_team):
                     spawn(index, 7)
+                    return
                 elif(not check_space(index, 9) == same_team):
                     spawn(index, 9)
+                    return
                 else:
                     dlog("Some error happened when spawning row 2")
             if(check_space(index + 2*forward, 8) == same_team and check_space(index + forward, 7) == same_team and check_space(index + forward, 9)):
                 if(not check_space(index, 10)):
                     spawn(index, 10)
+                    return
                 elif(not check_space(index, 6)):
                     spawn(index, 6)
+                    return
                 elif(not check_space(index, 8)):
                     spawn(index, 8)
+                    return
 
                  
 
@@ -337,14 +366,7 @@ def turn():
         if(spawnRandom):
             if not hasSpawned:
                 for _ in range(board_size):
-    #                if not check_space(index, 7):
-    #                    if not check_space(index, 8):
-    #                        spawn(index, 8)
-    #                        dlog('Spawned unit at: (' + str(index) + ', ' + str(8) + ')')
-    #                    spawn(index, 7)
-    #                    dlog('Spawned unit at: (' + str(index) + ', ' + str(7) + ')')
-    #                else:
-                    i = random.randint(0, board_size - 1)
+                    i = random.randint(0, board_size - 1, 2)
                     if not check_space(index, i):
                         spawn(index, i)
                         dlog('Spawned unit at: (' + str(index) + ', ' + str(i) + ')')
